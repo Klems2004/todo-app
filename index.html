@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>To do list</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div class="app">
+      <h1>My To-Do List</h1>
+
+      <input id="taskInput" type="text" placeholder="Type a task" />
+      <button id="addBtn">Add</button>
+      <p id="error"></p>
+
+      <ul id="taskList"></ul>
+    </div>
+
+    <script>
+      let taskInput = document.getElementById("taskInput");
+      let addBtn = document.getElementById("addBtn");
+      let error = document.getElementById("error");
+      let taskList = document.getElementById("taskList");
+
+      let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+      // convert old saved tasks (plain text) into objects
+      tasks = tasks.map(function (task) {
+        if (typeof task === "string") {
+          return { text: task, done: false };
+        }
+        return task;
+      });
+
+      function saveTasks() {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      }
+
+      function renderTasks() {
+        taskList.innerHTML = "";
+
+        tasks.forEach(function (task, index) {
+          let li = document.createElement("li");
+          li.textContent = task.text;
+
+          if (task.done) {
+            li.classList.add("done");
+          }
+
+          let doneBtn = document.createElement("button");
+          if (task.done) {
+            doneBtn.textContent = "Undo";
+          } else {
+            doneBtn.textContent = "Done";
+          }
+          doneBtn.addEventListener("click", function () {
+            task.done = !task.done;
+            saveTasks();
+            renderTasks();
+          });
+
+          let deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "Delete";
+          deleteBtn.addEventListener("click", function () {
+            tasks.splice(index, 1);
+            saveTasks();
+            renderTasks();
+          });
+
+          li.appendChild(doneBtn);
+          li.appendChild(deleteBtn);
+          taskList.appendChild(li);
+        });
+      }
+
+      addBtn.addEventListener("click", function () {
+        let text = taskInput.value.trim();
+
+        if (text === "") {
+          error.textContent = "Please type a task first.";
+          return;
+        }
+
+        error.textContent = "";
+        tasks.push({ text: text, done: false });
+        saveTasks();
+        renderTasks();
+        taskInput.value = "";
+      });
+
+      renderTasks();
+
+      taskInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          addBtn.click();
+        }
+      });
+    </script>
+  </body>
+</html>
